@@ -41,7 +41,7 @@
             position: fixed;
             top: 10px;
             left: 50%;
-            transform: translateX(-50%); /* 중앙으로 정렬 */
+            transform: translateX(-50%);
             background-color: #28a745;
             color: white;
             padding: 10px 20px;
@@ -77,7 +77,7 @@
 <div id="toast" class="toast"></div>
 
 <script>
-    const apiUrl = "http://localhost:8080/post";
+    const apiUrl = "http://52.79.217.249:8080/post"; // AWS 서버의 퍼블릭 IP로 설정
 
     // Toast 메시지 표시 함수
     function showToast(message) {
@@ -87,7 +87,7 @@
 
         setTimeout(() => {
             toast.classList.remove("show");
-        }, 2000); // 0.5초 후 사라짐
+        }, 2000); // 2초 후 사라짐
     }
 
     // 폼 제출 이벤트 처리
@@ -125,6 +125,7 @@
                 itemDiv.className = "item";
                 itemDiv.innerHTML = `
                         <div class="view-mode">
+                        <p><strong>ID:</strong> ${item.id}</p>
                             <h3>${item.title}</h3>
                             <p><strong>Username:</strong> ${item.username}</p>
                             <p><strong>Content:</strong> ${item.content}</p>
@@ -155,10 +156,11 @@
         const itemDiv = button.closest(".item");
         const viewMode = itemDiv.querySelector(".view-mode");
 
+        // ID 추가 후 올바른 선택자로 수정
         const title = viewMode.querySelector("h3").innerText;
-        const username = viewMode.querySelector("p:nth-child(2)").innerText.replace("Username: ", "");
-        const content = viewMode.querySelector("p:nth-child(3)").innerText.replace("Content: ", "");
-        const price = viewMode.querySelector("p:nth-child(4)").innerText.replace("Price: ", "");
+        const username = viewMode.querySelector("p:nth-child(3)").innerText.replace("Username: ", "");
+        const content = viewMode.querySelector("p:nth-child(4)").innerText.replace("Content: ", "");
+        const price = viewMode.querySelector("p:nth-child(5)").innerText.replace("Price: ", "");
 
         viewMode.innerHTML = `
             <div class="edit-mode">
