@@ -19,6 +19,7 @@ public class ItemResponseDto {
         this.title = item.getTitle();
         this.content = item.getContent();
         this.price = item.getPrice();
+
     }
 
 }

@@ -36,5 +36,6 @@ public class Item {
         this.title = requestDto.getTitle();
         this.content = requestDto.getContent();
         this.price = requestDto.getPrice();
+
     }
 }

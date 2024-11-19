@@ -16,6 +16,7 @@ public class PostService {
 
     private final PostRepository postRepository;
 
+
     public ItemResponseDto createPost(ItemRequestDto requestDto) {
         Item item = new Item(
                 requestDto.getUsername(),

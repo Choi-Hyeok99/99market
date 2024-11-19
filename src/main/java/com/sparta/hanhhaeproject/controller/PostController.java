@@ -12,6 +12,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PostController {
 
+
     private final PostService postService;
 
     @PostMapping("/post")
