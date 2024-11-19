@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Item Management</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        input, textarea {
+            display: block;
+            margin-bottom: 10px;
+            padding: 10px;
+            width: 300px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .item {
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .item-actions {
+            margin-top: 10px;
+        }
+        .toast {
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%); /* 중앙으로 정렬 */
+            background-color: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+    </style>
+</head>
+<body>
+<h1>Item Management</h1>
+
+<!-- 게시글 생성 폼 -->
+<form id="item-form">
+    <h2>Create a New Item</h2>
+    <input type="text" id="username" placeholder="Username" required>
+    <input type="text" id="title" placeholder="Title" required>
+    <textarea id="content" placeholder="Content" required></textarea>
+    <input type="number" id="price" placeholder="Price" required>
+    <button type="submit">Create Item</button>
+</form>
+
+<!-- 게시글 리스트 -->
+<h2>Item List</h2>
+<div id="item-list"></div>
+
+<!-- Toast 메시지 -->
+<div id="toast" class="toast"></div>
+
+<script>
+    const apiUrl = "http://localhost:8080/post";
+
+    // Toast 메시지 표시 함수
+    function showToast(message) {
+        const toast = document.getElementById("toast");
+        toast.innerText = message;
+        toast.classList.add("show");
+
+        setTimeout(() => {
+            toast.classList.remove("show");
+        }, 2000); // 0.5초 후 사라짐
+    }
+
+    // 폼 제출 이벤트 처리
+    document.getElementById("item-form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const username = document.getElementById("username").value;
+        const title = document.getElementById("title").value;
+        const content = document.getElementById("content").value;
+        const price = document.getElementById("price").value;
+
+        const response = await fetch(apiUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, title, content, price }),
+        });
+
+        if (response.ok) {
+            document.getElementById("item-form").reset();
+            fetchItems();
+            showToast("글이 작성되었습니다.");
+        }
+    });
+
+    // 서버에서 게시글 리스트 가져오기
+    async function fetchItems() {
+        const response = await fetch(apiUrl);
+        if (response.ok) {
+            const items = await response.json();
+            const itemList = document.getElementById("item-list");
+            itemList.innerHTML = "";
+
+            items.forEach((item) => {
+                const itemDiv = document.createElement("div");
+                itemDiv.className = "item";
+                itemDiv.innerHTML = `
+                        <div class="view-mode">
+                            <h3>${item.title}</h3>
+                            <p><strong>Username:</strong> ${item.username}</p>
+                            <p><strong>Content:</strong> ${item.content}</p>
+                            <p><strong>Price:</strong> ${item.price}</p>
+                            <div class="item-actions">
+                                <button onclick="enterEditMode(${item.id}, this)">Edit</button>
+                                <button onclick="deleteItem(${item.id})">Delete</button>
+                            </div>
+                        </div>
+                    `;
+                itemList.appendChild(itemDiv);
+            });
+        }
+    }
+
+    // 게시글 삭제
+    async function deleteItem(id) {
+        const response = await fetch(`${apiUrl}/${id}`, { method: "DELETE" });
+
+        if (response.ok) {
+            fetchItems();
+            showToast("글이 삭제되었습니다.");
+        }
+    }
+
+    // 수정 모드 활성화
+    function enterEditMode(id, button) {
+        const itemDiv = button.closest(".item");
+        const viewMode = itemDiv.querySelector(".view-mode");
+
+        const title = viewMode.querySelector("h3").innerText;
+        const username = viewMode.querySelector("p:nth-child(2)").innerText.replace("Username: ", "");
+        const content = viewMode.querySelector("p:nth-child(3)").innerText.replace("Content: ", "");
+        const price = viewMode.querySelector("p:nth-child(4)").innerText.replace("Price: ", "");
+
+        viewMode.innerHTML = `
+            <div class="edit-mode">
+                <input type="text" id="edit-username" value="${username}">
+                <input type="text" id="edit-title" value="${title}">
+                <textarea id="edit-content">${content}</textarea>
+                <input type="number" id="edit-price" value="${price}">
+                <button onclick="saveItem(${id}, this)">Save</button>
+                <button onclick="cancelEditMode()">Cancel</button>
+            </div>
+        `;
+    }
+
+    // 수정 내용 저장
+    async function saveItem(id, button) {
+        const itemDiv = button.closest(".item");
+
+        const username = itemDiv.querySelector("#edit-username").value;
+        const title = itemDiv.querySelector("#edit-title").value;
+        const content = itemDiv.querySelector("#edit-content").value;
+        const price = itemDiv.querySelector("#edit-price").value;
+
+        const response = await fetch(`${apiUrl}/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, title, content, price }),
+        });
+
+        if (response.ok) {
+            fetchItems();
+            showToast("글이 수정되었습니다.");
+        }
+    }
+
+    // 수정 모드 취소
+    function cancelEditMode() {
+        fetchItems();
+    }
+
+    // 페이지 로드 시 게시글 리스트 가져오기
+    fetchItems();
+</script>
+</body>
+</html>
